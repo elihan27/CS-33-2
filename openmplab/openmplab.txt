@@ -1,0 +1,218 @@
+Elizabeth Han
+004815046
+
+
+
+I downloaded the openmplab file onto lnxsrv07 and unzipped it.
+	$ scp openmplab.tar elizabeh@lnxsrv07.seas.ucla.edu:~ 
+	$ tar –xvf openmplab.tar
+
+
+Checking the function/total time of the sequential version:
+FUNC TIME : 0.498162
+TOTAL TIME : 2.313735
+
+
+Checking time per function:
+	$ make clean
+	$ make seq GPROF=1
+	$ ./seq
+	$ gprof seq | less
+
+FUNC TIME : 0.593872
+TOTAL TIME : 2.521421
+
+Each sample counts as 0.01 seconds.
+  %   cumulative   self              self     total           
+ time   seconds   seconds    calls  ms/call  ms/call  name    
+ 66.16      0.37     0.37       15    24.70    25.97  func1
+ 17.88      0.47     0.10  5177344     0.00     0.00  rand2
+  5.36      0.50     0.03                             sequence
+  3.58      0.52     0.02                             filter
+  1.79      0.53     0.01   491520     0.00     0.00  findIndexBin
+  1.79      0.54     0.01       15     0.67     0.67  func3
+  1.79      0.55     0.01        1    10.01    91.13  addSeed
+  1.79      0.56     0.01        1    10.01    10.01  imdilateDisk
+  0.00      0.56     0.00   983042     0.00     0.00  round
+  0.00      0.56     0.00       16     0.00     0.00  dilateMatrix
+  0.00      0.56     0.00       15     0.00     0.00  func2
+  0.00      0.56     0.00       15     0.00     0.00  func4
+  0.00      0.56     0.00       15     0.00     0.67  func5
+  0.00      0.56     0.00       15     0.00     0.00  rand1
+  0.00      0.56     0.00        2     0.00     0.00  get_time
+  0.00      0.56     0.00        1     0.00     0.00  elapsed_time
+  0.00      0.56     0.00        1     0.00     0.00  fillMatrix
+  0.00      0.56     0.00        1     0.00     0.00  func0
+
+Function 1 takes up the most time per call, so I decided to modify that first,
+ using #pragma omp parallel for on the for loops, specifying 8 threads, and using first 
+private+ private for initialized variables and uninitialized variables, respectively.  
+I checked the function time with:
+	$ make clean
+	$ make omp 
+	$ ./omp   
+
+
+	FUNC TIME : 0.248985 //without gprof
+	TOTAL TIME : 2.087301
+
+	FUNC TIME : 0.334247 //with gprof
+	TOTAL TIME : 2.295103
+
+ 77.68      0.45     0.45                             filter
+ 12.08      0.52     0.07  4290443     0.00     0.00  rand2
+  5.18      0.55     0.03        1    30.04    98.55  addSeed
+  3.45      0.57     0.02                             sequence
+  1.73      0.58     0.01        1    10.01    10.01  imdilateDisk
+  0.00      0.58     0.00   491520     0.00     0.00  findIndexBin
+  0.00      0.58     0.00   109161     0.00     0.00  round
+  0.00      0.58     0.00       16     0.00     0.00  dilateMatrix
+  0.00      0.58     0.00       15     0.00     0.00  func1
+  0.00      0.58     0.00       15     0.00     0.00  func2
+  0.00      0.58     0.00       15     0.00     0.00  func3
+  0.00      0.58     0.00       15     0.00     0.00  func4
+  0.00      0.58     0.00       15     0.00     0.00  func5
+  0.00      0.58     0.00       15     0.00     0.00  rand1
+  0.00      0.58     0.00        2     0.00     0.00  get_time
+  0.00      0.58     0.00        1     0.00     0.00  elapsed_time
+  0.00      0.58     0.00        1     0.00     0.00  fillMatrix
+  0.00      0.58     0.00        1     0.00     0.00  func0
+  0.00      0.58     0.00        1     0.00     0.00  getNeighbors
+
+
+Altered the number of threads to 16 to see if that changed performance:
+
+FUNC TIME : 0.099201 //which it did.  Significantly.
+TOTAL TIME : 1.981319
+
+I altered the number of threads back to 8, to see it would increase the total ms/call, and checked gprof again:
+
+ 66.33      0.53     0.53                             filter
+ 21.28      0.70     0.17  4270204     0.00     0.00  rand2
+  5.01      0.74     0.04        1    40.05   207.23  addSeed
+  3.75      0.77     0.03                             sequence
+  2.50      0.79     0.02   491520     0.00     0.00  findIndexBin
+  1.25      0.80     0.01        1    10.01    10.01  imdilateDisk
+  0.00      0.80     0.00   130946     0.00     0.00  round
+  0.00      0.80     0.00       16     0.00     0.00  dilateMatrix
+  0.00      0.80     0.00       15     0.00     0.00  func1
+  0.00      0.80     0.00       15     0.00     0.00  func2
+  0.00      0.80     0.00       15     0.00     0.00  func3
+  0.00      0.80     0.00       15     0.00     0.00  func4
+  0.00      0.80     0.00       15     0.00     1.33  func5
+  0.00      0.80     0.00       15     0.00     0.00  rand1
+  0.00      0.80     0.00        2     0.00     0.00  get_time
+  0.00      0.80     0.00        1     0.00     0.00  elapsed_time
+  0.00      0.80     0.00        1     0.00     0.00  fillMatrix
+  0.00      0.80     0.00        1     0.00     0.00  func0
+  0.00      0.80     0.00        1     0.00     0.00  getNeighbors
+
+The function with the next most highest portion of calls is function 5, which I altered in the same manner as function 1, 
+and then checked function time
+
+	FUNC TIME : 0.083116 //without gprof
+	TOTAL TIME : 1.978812
+
+
+	FUNC TIME : 0.207227 //with gprof
+	TOTAL TIME : 2.163460 
+
+time   seconds   seconds    calls  ms/call  ms/call  name    
+ 70.97      0.56     0.56                             filter
+ 22.81      0.74     0.18  4275493     0.00     0.00  rand2
+  2.53      0.76     0.02                             sequence
+  1.27      0.77     0.01    34473     0.00     0.00  findIndexBin
+  1.27      0.78     0.01        1    10.01   186.80  addSeed
+  1.27      0.79     0.01        1    10.01    10.01  imdilateDisk
+  0.00      0.79     0.00   135284     0.00     0.00  round
+  0.00      0.79     0.00       16     0.00     0.00  dilateMatrix
+  0.00      0.79     0.00       15     0.00     0.00  func1
+  0.00      0.79     0.00       15     0.00     0.00  func2
+  0.00      0.79     0.00       15     0.00     0.00  func3
+  0.00      0.79     0.00       15     0.00     0.00  func4
+  0.00      0.79     0.00       15     0.00     0.00  func5
+  0.00      0.79     0.00       15     0.00     0.00  rand1
+  0.00      0.79     0.00        2     0.00     0.00  get_time
+  0.00      0.79     0.00        1     0.00     0.00  elapsed_time
+  0.00      0.79     0.00        1     0.00     0.00  fillMatrix
+  0.00      0.79     0.00        1     0.00     0.00  func0
+  0.00      0.79     0.00        1     0.00     0.00  getNeighbors
+
+At this point, I realized that the ms/call stopped giving me any real indication on which 
+function I should try optimizing (since all of the functions I could alter were apparently
+ 0.00 ms/call), and stopped checking with gprof altogether.  
+
+
+Function 3 was altered in the same manner as the other two, with the addition of reduction(:+), 
+since it involved an accumulator.  
+It did become faster, but it also got me a segmentation fault. Figured out it was because I specified
+loop bounds in my private(), and removed them.  
+
+Altered functions 0, 2(with accumulator), and 4 in similar manner (specifying 8 threads).  
+
+After altering function 0:
+FUNC TIME : 0.084755
+TOTAL TIME : 2.026536
+
+After altering function 2:
+FUNC TIME : 0.338314
+TOTAL TIME : 2.426509
+
+add ‘private’ (including the loop bounds): no significant difference
+FUNC TIME : 0.329581 
+TOTAL TIME : 2.328048
+
+realize forgot to specify the number of threads and added specification onto function 2 (8 threads)
+FUNC TIME : 0.070780
+TOTAL TIME : 1.970494
+
+After altering function 4:
+FUNC TIME : 0.070446  //slighhhhht difference
+TOTAL TIME : 2.007208
+
+Then altered all function to specify 16 threads 
+FUNC TIME : 0.055149
+TOTAL TIME : 1.950657
+
+I then checked to see if the output was correct using
+	$ make check
+		FUNC TIME : 0.050397
+		TOTAL TIME : 1.893877
+		diff --brief correct.txt output.txt
+
+
+And checked for memory leaks using
+	$ make filter MTRACE=1
+	$ ./filter
+	$ make checkmem
+
+I got:
+
+Memory not freed:
+-----------------
+           Address     Size     Caller
+0x0000000001338070   0x12c0  at 0x7f6de1813869
+0x0000000001339340     0xc0  at 0x7f6de1813869
+0x0000000001339410     0x88  at 0x7f6de18138b9
+0x00000000013394a0    0x240  at 0x7f6de1d43f45
+0x00000000013396f0    0x240  at 0x7f6de1d43f45
+0x0000000001339940    0x240  at 0x7f6de1d43f45
+0x0000000001339b90    0x240  at 0x7f6de1d43f45
+0x0000000001339de0    0x240  at 0x7f6de1d43f45
+0x000000000133a030    0x240  at 0x7f6de1d43f45
+0x000000000133a280    0x240  at 0x7f6de1d43f45
+0x000000000133a4d0    0x240  at 0x7f6de1d43f45
+0x000000000133a720    0x240  at 0x7f6de1d43f45
+0x000000000133a970    0x240  at 0x7f6de1d43f45
+0x000000000133abc0    0x240  at 0x7f6de1d43f45
+0x000000000133ae10    0x240  at 0x7f6de1d43f45
+0x000000000133b060    0x240  at 0x7f6de1d43f45
+0x000000000133b2b0    0x240  at 0x7f6de1d43f45
+0x000000000133b500    0x240  at 0x7f6de1d43f45
+[elizabeh@lnxsrv07 ~/openmplab]$ 
+
+
+Which means the only memory leaks that were there were caused by OpenMP itself.  
+
+
+

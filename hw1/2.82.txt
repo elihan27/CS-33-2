@@ -1,0 +1,22 @@
+2.82
+
+A. (x<y) == (-x>-y)
+Does not always yield one. An example that causes this expression to result in zero is when x = INT_MIN, since there is no positive counterpart to it.
+
+B. ((x+y)<<4) + y-x == 17*y+15*x
+Always yields one.  This is due to the fact that left-shifting (x+y) by 4 bits is the same as multiplying by 2^4, or sixteen.  This means the left side of the expression is 16*(x+y) +y -x, which can be expanded to 16*x + 16*y + y -x, which, when simplified, is 17*y +15*x.
+
+C. ~x +~y+1 == ~(x+y)
+Always yields one.  This is because -x = ~x+1.  If you were to add 1 to both sides of the expression, you would get ~x + 1 + ~y +1 == ~(x+y) +1, which is equivalent to -x - y == -(x+y), which is true.
+
+D. (ux-uy) == -(unsigned)(y-x)
+Always yields one.  Mathematically speaking, x-y is equal to -(y-x).  Casting from signed to unsigned doesn’t actually change the bit pattern, so y-x has the same bit pattern as -(ux-uy) - or, in other words, (ux-uy) == -(unsigned)(y-x).
+
+E. ((x>>2)<<2) <= x
+Always yields one.  Right-shifting by two bits and then immediately left-shifting two bits simply means that both of the last two bits now equal zero.  If the last two bits of x were already zero, then the expression on the left equals x; if not, then you’re essentially removing the value of those two bits from x, so the value the expression on the left yields is less than x.
+
+F. x >> 1 == (ux >> 1) + (ux & (-1 << 31))
+Always yields one. Though x and ux have the same bit pattern, x’s right shifts are arithmetic and ux’s are logical.  This means (ux>>1) will have a significant bit of zero, no matter if x is negative or not.  To make up for that, the second half of the right-hand expression creates a mask for ux that singles out the most significant bit, and adds it to (ux>>1).  
+
+G. x % 128 == (x & 127)
+Does not always yields one.  An example that causes this expression to result in zero is one x = -1.  In fact, this is the case if x is any negative number.

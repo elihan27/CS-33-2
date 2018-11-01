@@ -1,0 +1,24 @@
+Elizabeth Han
+004815046
+
+
+A=9 and B=5.
+
+The assembly instructions of setVal are, essentially:
+
+1  setVal:
+2	rax = (q+8) 
+3	rax = (rax + 32) + rax 
+4	(p+184) = rax
+5	ret
+
+The setVal function sets p->y to (q->t + q->u).  To access first q->t, it bypasses the first 8 bytes of str2 - char array[B] - which means that array has, at most, 8 bytes (and so B <= 8.  
+
+To access q->u, the function bypasses the first 32 bytes.  short s[A] must be in position 12, since q->t is in position 8, and an int is 4 bytes long.  If q->u is in position 32, this means that there are 20 bytes allocated to s[A], and, since s[A] is an array of shorts (2 bytes long), A <= 10.
+
+setVal is meant to set p->y, and to do so, it bypasses the first 184 bytes of p.  This means int x[A][B] is at 184 bytes, or 46 integers long, at most.  Since p->y is a long, its position must be at a position that is a multiple of 8, meaning that x is is either 45  integers long (180 bytes, but not a multiple of 8) or 46 integers.
+
+The factors have to be A<=10 and B<=8.  The factors of 46 are 2 and 23.  23 is a prime number, which means 46 can’t satisfy either of the conditions for A and B.  So this means x has to be 45 integers long, and the only factors of 45 that satisfy the conditions are 9 and 5.
+
+So A=9 and B=5.
+

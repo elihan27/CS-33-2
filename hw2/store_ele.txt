@@ -1,0 +1,33 @@
+Elizabeth Han
+004815046
+
+
+A.
+
+The formula for the location of array element A[i][j][k] is:
+
+L* ( S*T*i + T*j + k ) + A
+
+
+
+B.
+
+R = 7
+S = 5
+T = 13
+
+
+If we examine the assembly code of store_ele, then:
+1	
+2	rax = 3j
+3	rax = j + 12j
+4	j = i
+5	j = j << 6 (or j*64)
+6	i = i + j
+7	i = rax + i	   
+8	k = k + i
+9	rax = 8k + A
+10 	*dest = rax
+
+The computed memory address in line 10 is 8k+A, which, working backwards, can be found to equal 8(k+13j+65i + A.  We can solve for T, looking at the coefficient for j, which then allows us to solve for S (since T*S = 65).  We can look at the size of the array (which, in line 11, is shown to be 3640), and set that equal to R*S*T to solve for R.
+

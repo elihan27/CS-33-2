@@ -1,0 +1,17 @@
+Elizabeth Han
+004815046
+
+12.17:
+
+A. The main thread exited the program before the completion of the thread routine.
+B. 	pthread_exit(NULL);
+	pthread_join(tid, NULL);
+
+
+12.24:
+
+All of the functions in the Rio I/O package have pointers passed in as arguments (void *userbuf and rio_t *rp), so none of them are explicitly reentrant.  However, if the pointers that are passed in point to nonshared data, these functions would be implicitly reentrant.  
+
+
+
+

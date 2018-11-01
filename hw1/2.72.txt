@@ -1,0 +1,12 @@
+2.72
+
+A. 
+
+The sizeof operator returns size_t, which is unsigned.  Therefore, when doing arithmetic with sizeof(val) and maxbytes, maxbytes will be converted to unsigned as well.  The result of two unsigned numbers will also be unsigned, which means it will always be greater than or equal to zero, so the conditional tests always succeeds.
+
+B.
+
+void copy_int (int val, void * buf, int maxbytes){
+	if ((unsigned)maxbytes >= sizeof(val))
+		memcpy(buf, (void*) &val, sizeof(val));
+}

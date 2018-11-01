@@ -1,0 +1,20 @@
+Elizabeth Han
+004185046
+
+A. (float)x == (float)dx
+Always yields 1. An int-to-float cannot overflow, since its range is less than that of float.  A double-to-float is capable of overflowing, but the double in this case will have exact numeric value as the int, so the rounding that both undergo should be the same.
+
+
+B. dx - dy == (double)(x - y)
+Does not always yield 1. There are values that double can represent that ints cannot.  For example, INT_MIN -1 is perfectly representable using doubles.  The result will overflow if when using ints (which is why B would require -fwrapv to prevent undefined behavior), and since the expression on the right side is only converted to double after the computation takes place, the two expressions will not equal each other.
+
+C. (dx + dy) + dz == dx + (dy + dz)
+Always yield 1.  If dx, dy, and dz could be any double, then this would not be true, since rounding can easily mess with the associativity of the expression.  However, these variables are limited to what an int can represent, and considering that a double has a wider range than what an int can express, there’s no way that adding these variables in any order would give a sum that wouldn’t be able to be accurately represented by a double, so the rounding that would normally throw the result off would not occur.
+
+D. (dx * dy) * dz == dx * (dy * dz)
+Does not always yield 1.  An example is if dx, dy = 2^30 and dz = 2^9.  The expression on the left will initially produce 2^60, which exceeds the largest number that it, and all smaller integers, can be represented without losing precision, so there’ll likely produce a rounding error, which will be multiplied by 512.  The expression on right will initially produce 2^39, which is perfectly representable, but multiplying by dx will produce 2^69, which is not, so there’ll be another rounding error.  It is unlikely that these two expressions will round to the same result.
+
+E. (dx / dx) == dz / dz
+Does not always yield 1. If dx or dz = 0, the result of (dx/dx) or (dz/dz) would be a NaN, and a NaN can never equal anything else.  
+
+

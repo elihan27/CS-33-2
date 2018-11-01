@@ -1,0 +1,14 @@
+Elizabeth Han
+004815046
+
+
+
+1. -O2
+This optimization causes the compiler to assume that n + (positive number) is greater than n, which is why the assembly code produced is the shorter than the code produced by the other two optimization flags. It simply XORs n with itself and returns the result, so n + 9223372036854775807 < n will return false (0).
+
+2. -O2 -fwrapv
+This optimization makes the compiler wrap numbers when they overflow, and because this is allowed, n + 9223372036854775807 (when it overflows) can actually become a smaller number than n, which is the reason why the assembly code actually uses cmp to check if n + 9223372036854775807 < n instead of just assuming it will return false.
+
+3. -02 -fsanitize=undefined
+This optimization actually checks for overflow.  Since there’s an extra action to be taken when the n + 9223372036854775807 overflows - a conditional jump and call to a function to print out an overflow message (which also means the compiler needs to allocate/deallocate items from stack) - the assembly code is much longer.  
+

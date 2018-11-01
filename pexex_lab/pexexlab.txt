@@ -1,0 +1,35 @@
+Elizabeth Han
+004815046
+pexex.txt
+
+
+
+Logged into lnxsrv07, typed in:
+
+(gdb) ~eggert/src/gnu/emacs-25.2/
+
+which did absolutely nothing, since that wasn’t a valid command. I then tried:
+
+gdb ~eggert/bin64/bin/emacs-25.2r -batch -eval '(print (* 1250284240 - 1844255039))'
+
+which got me a giant block of text, not any readable assembly code. I eventually realized that I needed to set the breakpoint, like so:
+
+gdb ~eggert/bin64/bin/emacs-25.2
+break Ftimes
+r -batch -eval '(print (* 6997 -4398042316799 179))'
+
+To trace it, I used:
+
+gdb ~eggert/bin64/bin/emacs-25.2
+break Ftimes
+set logging on trace.tr
+set disassemble-next-line on
+r -batch -eval '(print (* 6997 -4398042316799 179))'
+
+I then examined the code using si (to proceed through the instructions) and info registers (to see what was in each register at the time), as well as x [memoryaddress] (to check to see if the value at a memory address was being altered.
+
+Then I realized that I had run the wrong multiplication through, so I redid it using the correct command.
+
+r -batch -eval '(print (* 1250284240 -1844255039))'
+
+

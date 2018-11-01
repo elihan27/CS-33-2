@@ -1,0 +1,37 @@
+Elizabeth Han
+004815046
+
+
+struct e1 in union ele consists of long *p and long y, which are both 8 bytes long, meaning that e1 would take up 16 bytes.  struct e2 consists of long x and union ele *next, which are also both 8 bytes, meaning that e2 takes up 16 bytes.
+
+A.
+	OFFSET
+e1.p	0	//listed 1st in e1, and since e2 overlaps,  no offset required.
+e1.y	8	//listed after e1.p, which is 8 bytes long,
+e2.x	0	//listed 1st in e2, and since e1 overlaps,  no offset required.
+e2.next	8	//listed after e2.x, which is 8 bytes long,
+
+B.  16 bytes.  e1 and e2 both take up 16 bytes, but since ele is a union, these overlap.
+
+C.
+
+up->e1.x = *(up->e2.next->e1.p) - (up->e2.next->e1.y);
+
+
+1  proce:
+2	movq	8(%rdi), %rax 	//8(%rdi) can refer to either e1.y or e2.next
+3	movq	(%rax), %rdx	//(%rax) refers to the value inside the address inside rax
+				//e1.y is not a pointer, so it refers to e2.next
+4	movq	(%rdx), %rdx	//rdx contains e2.next, no offset mentioned so
+				//(%rdx) refers to either e2.next->e1.p or e2.next->e2.x.
+5	subq	8(%rax), %rdx	// rax refers to e2.next, and the value at e2.next+ 8 is either 
+				//e2.next->e1.y  or e2.next->e2.next.  
+6	movq	%rdx, (%rdi)	//((%rdi) can refer to e1.x or e2.p
+7	ret
+
+
+The given code for void proc (union ele *up) resembles this:
+
+up->	 = *(	) - (	);
+
+The first operand is dereferenced, so it must be a pointer.  As mentioned in insn 4, our options for this operand are e2.next->e1.p or e2.next->e2.x, and e2.next->e1.p is a pointer. The second operand then must be a value.  Our options are e2.next->e1.y  or e2.next->e2.next, so the second operand must be e2.next->e1.y. The sum of these two must be a value then ( since it is not dereferenced) and our options for this are up->e1.x or up->e2.p, and up->e1.x is a value.

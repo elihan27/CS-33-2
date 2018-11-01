@@ -1,0 +1,18 @@
+Elizabeth Han
+004815046
+
+
+
+
+1.  The number of bits in an emacs lisp integer is 62 bits (the other two bits being used for a tag) instead of 64, meaning that there are two bits of information lost (the integer is left-shifted by 2). Emacs compensates for these bits by doing an arithmetic right shift (for example: sar $0x2,%rdi ), and then left shifting (lea 0x2(,%r12,4),%rax).  But the constant shifting results in the loss of information, which is why the result isn’t correct.
+
+2. most-negative-fixnum is defined in lisp.h as (-1 - MOST_POSITIVE_FIXNUM).  most-positive-fixnum is defined as (EMACS_INT_MAX >> INTTYPEBITS), which would be (2^63 - 1) >> 2, or 2^61 - 1, or 2305843009213693951.  If you subtract this from -1, you get -2305843009213693952. 
+
+3. Again, your most-positive-fixnum is 2305843009213693951, or  0x7FFFFFFFFFFFFFFF.  Multiplied by itself, you get 5316911983139663487003542222693990401, or 0x3FFFFFFFFFFFFFFC000000000000001, which overflows.  Multiplying this number by your most-positive-fixnum two more times only makes it further overflow, until the final representation appears to be 000000000000001.
+
+4.  Emacs’s arithmetic functions don’t check for overflow, which mean the overflow behavior is largely determined by hardware, which can cause runtime errors.  When using -fwrapv, overflow is meant to wrap, so if anything, -fwrapv would prevent problems.  Still, it probably won’t print out the correct mathematical result due to said overflow.
+
+5.  When running emacs -Q -batch -eval '(print (format-time-string "%Y-%m-%d %H:%M:%S %Z" nil (concat (make-string 1000 ?X) “0”)))’ , the program crashes, stating that the error is ‘double free or corruption’.  The bug manifests when when the string (of 1000 Xs) is passed into memory - it’s simply too long, and overwrote a portion of memory the program didn’t mean to, freeing it.  So when the final function tried to free it again, it caused an error.
+
+I used backtrace, si, info registers, and x [memory address].
+

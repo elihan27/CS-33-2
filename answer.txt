@@ -1,0 +1,11 @@
+12.18
+
+A. Safe
+B. Safe
+C. Unsafe - enters the critical section at L2.
+
+12.24
+
+
+The RIO I/O functions are implicitly reentrant.  This is due to the fact that all of these functions have parameters that are passed by reference (specifically rio_t *rp and void *usrbuf ), so the functions are only reentrant if these parameters point to non-shared data.
+
